@@ -1,4 +1,4 @@
-GEOID,date,national_cases_avg_per_100k,county_cases_avg_per_100k
+geoid,date,national_cases_avg_per_100k,county_cases_avg_per_100k
 19013,2020-01-26,0,NA
 19003,2020-01-26,0,NA
 19007,2020-01-26,0,NA

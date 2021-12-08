@@ -9,10 +9,10 @@ library(lubridate)
 geoids <- read_csv("Raw/county_pl.csv") %>%
   
   ## turn the geoid into a string
-  mutate(GEOID = str_pad(fips, 5, pad = "0")) %>% 
+  mutate(geoid = str_pad(fips, 5, pad = "0")) %>% 
   
   ## select all county geoids as a linkage base
-  select(GEOID) 
+  select(geoid) 
 
 
 ### Read in the national COVID-19 case data, originally from the NYT (us.csv)
@@ -34,14 +34,14 @@ nyt_national <- read_csv("Raw/us-covid-cases.csv") %>%
 nyt_county <- read_csv("Raw/us-counties-covid-cases.csv") %>%
   
   ## clean up GEOIDs and add weekdays
-  mutate(GEOID = str_remove(geoid, "USA-"), 
+  mutate(geoid = str_remove(geoid, "USA-"), 
          day = wday(date,label=T)) %>% 
   
   ## only select Sundays in 2020 for the base weekly averages
   filter(date > "2020-01-01" & date < "2021-01-01" & day == "Sun") %>% 
   
   ## select variables needed
-  select(GEOID, date, county_cases_avg_per_100k = cases_avg_per_100k) 
+  select(geoid, date, county_cases_avg_per_100k = cases_avg_per_100k) 
 
 
 
@@ -52,17 +52,17 @@ nyt_county <- read_csv("Raw/us-counties-covid-cases.csv") %>%
 nyt_dates <- left_join(nyt_national, geoids, by = character()) %>%
   
   ## Join county-level COVID-19 weekly case averages
-  left_join(nyt_county, by = c("date", "GEOID")) %>%  
+  left_join(nyt_county, by = c("date", "geoid")) %>%  
   
   ## select only needed vars
-  select(GEOID, everything())
+  select(geoid, everything())
 
 
 #### Transform GEOIDs to fix AK counties -------------------------------------
 
 ### Select Chugach and Copper River Census Areas
 nyt_ak <- nyt_dates %>%
-  filter(GEOID == "02066" | GEOID == "02063") %>% 
+  filter(geoid == "02066" | geoid == "02063") %>% 
   
   ## Group by week
   group_by(date) %>%
@@ -71,7 +71,7 @@ nyt_ak <- nyt_dates %>%
   summarise_if(is.numeric, sum) 
 
 ### Add the Valdez-Cordova Census Area GEOID to these weeks
-nyt_ak$GEOID <- "02261"
+nyt_ak$geoid <- "02261"
 
 
 ### Bind the Valdez-Cordova Census Area summary to the rest of the NYT data

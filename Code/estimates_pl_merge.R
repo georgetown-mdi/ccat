@@ -74,17 +74,17 @@ pl_est_merge <- left_join(pl, est, by = "GEOID") %>%
          PPH_DIFF = CEN_PPH_TOT - EST_PPH_TOT, # Persons per Household difference
          
          # If the population difference is zero, keep it at zero. Otherwise, calculate the share difference by taking the difference and dividing it by the total count
-         SHARE_POP_DIFF = ifelse(POP_DIFF == 0, 0, (POP_DIFF/CEN_POP_TOT)), 
-         SHARE_GQ_DIFF = ifelse(GQ_DIFF == 0, 0, (GQ_DIFF/CEN_GQ_TOT)), 
-         SHARE_HU_DIFF = ifelse(HU_DIFF == 0, 0, (HU_DIFF/CEN_HU_TOT)),
-         SHARE_NH_BA_DIFF = ifelse((NH_BA_DIFF == 0 | CEN_NH_BA_TOT == 0), 0, (NH_BA_DIFF/CEN_NH_BA_TOT)),
-         SHARE_NH_WA_DIFF = ifelse((NH_WA_DIFF == 0 | CEN_NH_WA_TOT == 0), 0, (NH_WA_DIFF/CEN_NH_WA_TOT)),
-         SHARE_NH_AI_DIFF = ifelse((NH_AI_DIFF == 0 | CEN_NH_AI_TOT == 0), 0, (NH_AI_DIFF/CEN_NH_AI_TOT)),
-         SHARE_NH_AA_DIFF = ifelse((NH_AA_DIFF == 0 | CEN_NH_AA_TOT == 0), 0, (NH_AA_DIFF/CEN_NH_AA_TOT)),
-         SHARE_NH_NA_DIFF = ifelse((NH_NA_DIFF == 0 | CEN_NH_NA_TOT == 0), 0, (NH_NA_DIFF/CEN_NH_NA_TOT)),
-         SHARE_NH_TOM_DIFF = ifelse((NH_TOM_DIFF == 0 | CEN_NH_TOM_TOT == 0), 0, (NH_TOM_DIFF/CEN_NH_TOM_TOT)),
-         SHARE_H_DIFF = ifelse(H_DIFF == 0, 0, (H_DIFF/CEN_H_TOT_TOT)),
-         SHARE_PPH_DIFF = ifelse(PPH_DIFF == 0, 0, (PPH_DIFF/CEN_PPH_TOT)),
+         SHARE_POP_DIFF = ifelse(POP_DIFF == 0, 0, (POP_DIFF/EST_POP_TOT)), 
+         SHARE_GQ_DIFF = ifelse(GQ_DIFF == 0, 0, (GQ_DIFF/EST_GQ_TOT)), 
+         SHARE_HU_DIFF = ifelse(HU_DIFF == 0, 0, (HU_DIFF/EST_HU_TOT)),
+         SHARE_NH_BA_DIFF = ifelse((NH_BA_DIFF == 0 | CEN_NH_BA_TOT == 0), 0, (NH_BA_DIFF/EST_NH_BA_TOT)),
+         SHARE_NH_WA_DIFF = ifelse((NH_WA_DIFF == 0 | CEN_NH_WA_TOT == 0), 0, (NH_WA_DIFF/EST_NH_WA_TOT)),
+         SHARE_NH_AI_DIFF = ifelse((NH_AI_DIFF == 0 | CEN_NH_AI_TOT == 0), 0, (NH_AI_DIFF/EST_NH_AI_TOT)),
+         SHARE_NH_AA_DIFF = ifelse((NH_AA_DIFF == 0 | CEN_NH_AA_TOT == 0), 0, (NH_AA_DIFF/EST_NH_AA_TOT)),
+         SHARE_NH_NA_DIFF = ifelse((NH_NA_DIFF == 0 | CEN_NH_NA_TOT == 0), 0, (NH_NA_DIFF/EST_NH_NA_TOT)),
+         SHARE_NH_TOM_DIFF = ifelse((NH_TOM_DIFF == 0 | CEN_NH_TOM_TOT == 0), 0, (NH_TOM_DIFF/EST_NH_TOM_TOT)),
+         SHARE_H_DIFF = ifelse(H_DIFF == 0, 0, (H_DIFF/EST_H_TOT_TOT)),
+         SHARE_PPH_DIFF = ifelse(PPH_DIFF == 0, 0, (PPH_DIFF/EST_PPH_TOT)),
          
          # Create percent vacant HU for vacancy calculations later on
          PCT_VACANT_HU_2020 = (CEN_HU_VACANT_TOT/CEN_HU_TOT)*100, 

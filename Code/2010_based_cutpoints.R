@@ -186,7 +186,7 @@ final_output <- v2010_chars_tot %>%
   
   # Calculate the differences we care about (numeric or percentage) depending on variable
   mutate(difference = ifelse(variable %in% c("POP_TOT", "HU_TOT", "GQ_TOT"), 
-                             (cen_2010 - est_2010) / cen_2010, 
+                             (cen_2010 - est_2010) / est_2010, 
                              cen_2010 - est_2010),
          difference = ifelse(is.na(difference) | is.infinite(difference), 0, difference)) %>%
   
