@@ -12,8 +12,8 @@ census_api_key(key = Sys.getenv("CENSUS_API_KEY"))
 
 #### Read in 2020 estimates data ------------------------------
 
-# Read in the 2020 population estimates data
-pop_est_2020 <- read_csv("Raw/CC-EST2020-ALLDATA6.csv") %>%
+# Read in the 2020 population estimates data with all demo characteristics
+pop_est_2020 <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/counties/asrh/CC-EST2020-ALLDATA.csv") %>%
   filter(SUMLEV == "050", # only look at counties
          AGEGRP == 0, # only look at total population
          YEAR == 13) %>% # only look at April 1, 2020 estimates
@@ -29,7 +29,73 @@ pop_est_2020 <- read_csv("Raw/CC-EST2020-ALLDATA6.csv") %>%
             EST_NH_NA_TOT = NHNA_MALE+NHNA_FEMALE, # Native Hawaiian and Other Pacific Islander alone Non-Hispanic
             EST_NH_TOM_TOT = NHTOM_MALE+NHTOM_FEMALE) # Two or more races Non-Hispanic
 
+## Calculate Proportion of 18+ to 20+ at the county level
 
+ccage_est_2020 <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/counties/asrh/CC-EST2020-AGESEX-ALL.csv") %>%
+  filter(SUMLEV == 50, 
+         YEAR == 13) %>%
+  select(STATE, COUNTY, POPESTIMATE, AGE18PLUS_TOT, AGE2024_TOT, 
+         AGE2544_TOT, AGE4564_TOT, AGE65PLUS_TOT) %>%
+  mutate(STATE = ifelse(STATE < 10, paste0("0", as.character(STATE)), as.character(STATE)),
+            COUNTY = ifelse(COUNTY < 10, paste0("00", as.character(COUNTY)),
+                            ifelse(COUNTY < 100, paste0("0", as.character(COUNTY)), as.character(COUNTY))),
+         GEOID = paste0(STATE, COUNTY),
+         AGE20PLUS_TOT = AGE2024_TOT + AGE2544_TOT + AGE4564_TOT + AGE65PLUS_TOT,
+         AGE18PLUS_FACT = AGE18PLUS_TOT / AGE20PLUS_TOT) %>%
+  select(GEOID, AGE18PLUS_TOT, AGE18PLUS_FACT)
+
+## Get 20+ at county level and create 18+ as well as 17 and under, raking to get correct total
+
+pop_est_2020_18P <- read_csv("https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/counties/asrh/CC-EST2020-ALLDATA.csv") %>%
+  filter(SUMLEV == "050", # only look at counties
+         AGEGRP >= 5, # only look at 20+
+         YEAR == 13) %>% # only look at April 1, 2020 estimates
+  transmute(STNAME, 
+            CTYNAME,
+            GEOID = paste0(STATE, COUNTY),
+            EST_POP_TOT = TOT_POP, 
+            EST_NH_WA_TOT = NHWA_MALE+NHWA_FEMALE, # White Alone Non-Hispanic
+            EST_NH_BA_TOT	= NHBA_MALE+NHBA_FEMALE, # Black Alone Non-Hispanic
+            EST_H_TOT_TOT	= H_MALE+H_FEMALE, # Hispanic any race
+            EST_NH_AI_TOT = NHIA_MALE+NHIA_FEMALE, # American Indian and Alaska Native alone Non-Hispanic
+            EST_NH_AA_TOT = NHAA_MALE+NHAA_FEMALE, # Asian Alone Non-Hispanic
+            EST_NH_NA_TOT = NHNA_MALE+NHNA_FEMALE, # Native Hawaiian and Other Pacific Islander alone Non-Hispanic
+            EST_NH_TOM_TOT = NHTOM_MALE+NHTOM_FEMALE) %>% # Two or more races Non-Hispanic
+  group_by(STNAME, CTYNAME, GEOID) %>%
+  summarize(EST_NH_WA_20P = sum(EST_NH_WA_TOT),
+            EST_NH_BA_20P = sum(EST_NH_BA_TOT),
+            EST_H_TOT_20P = sum(EST_H_TOT_TOT),
+            EST_NH_AI_20P = sum(EST_NH_AI_TOT),
+            EST_NH_AA_20P = sum(EST_NH_AA_TOT),
+            EST_NH_NA_20P = sum(EST_NH_NA_TOT),
+            EST_NH_TOM_20P = sum(EST_NH_TOM_TOT)) %>%
+  ungroup() %>%
+  full_join(ccage_est_2020, by = c("GEOID")) %>%
+  mutate(EST_NH_WA_18P = round(EST_NH_WA_20P * AGE18PLUS_FACT),
+         EST_NH_BA_18P = round(EST_NH_BA_20P * AGE18PLUS_FACT),
+         EST_H_TOT_18P = round(EST_H_TOT_20P * AGE18PLUS_FACT),
+         EST_NH_AI_18P = round(EST_NH_AI_20P * AGE18PLUS_FACT),
+         EST_NH_AA_18P = round(EST_NH_AA_20P * AGE18PLUS_FACT),
+         EST_NH_NA_18P = round(EST_NH_NA_20P * AGE18PLUS_FACT),
+         EST_NH_TOM_18P = round(EST_NH_TOM_20P * AGE18PLUS_FACT),
+         TOT_COMP = EST_NH_WA_18P + EST_NH_BA_18P + EST_H_TOT_18P + EST_NH_AI_18P +
+           EST_NH_AA_18P + EST_NH_NA_18P + EST_NH_TOM_18P,
+         DIFF = TOT_COMP - AGE18PLUS_TOT,
+         EST_NH_WA_18P = EST_NH_WA_18P - (round(EST_NH_WA_18P/TOT_COMP*DIFF)),
+         EST_NH_BA_18P = EST_NH_BA_18P - (round(EST_NH_BA_18P/TOT_COMP*DIFF)),
+         EST_H_TOT_18P = EST_H_TOT_18P - (round(EST_H_TOT_18P/TOT_COMP*DIFF)),
+         EST_NH_AI_18P = EST_NH_AI_18P - (round(EST_NH_AI_18P/TOT_COMP*DIFF)),
+         EST_NH_AA_18P = EST_NH_AA_18P - (round(EST_NH_AA_18P/TOT_COMP*DIFF)),
+         EST_NH_NA_18P = EST_NH_NA_18P - (round(EST_NH_NA_18P/TOT_COMP*DIFF)),
+         EST_NH_TOM_18P = EST_NH_TOM_18P - (round(EST_NH_TOM_18P/TOT_COMP*DIFF)),
+         TOT_COMP = EST_NH_WA_18P + EST_NH_BA_18P + EST_H_TOT_18P + EST_NH_AI_18P +
+           EST_NH_AA_18P + EST_NH_NA_18P + EST_NH_TOM_18P,
+         DIFF = TOT_COMP - AGE18PLUS_TOT,
+         EST_NH_WA_18P = EST_NH_WA_18P - DIFF,
+         EST_TOT_TOT_18P = AGE18PLUS_TOT) %>%
+  select(GEOID, EST_TOT_TOT_18P, EST_NH_WA_18P, EST_NH_BA_18P, EST_H_TOT_18P, 
+         EST_NH_AI_18P, EST_NH_AA_18P, EST_NH_NA_18P, EST_NH_TOM_18P)
+  
 hu_est_2020 <- read_csv("Raw/hu-est2020.csv") %>%
   filter(SUMLEV == "050") %>% # only look at counties
   transmute(GEOID = paste0(STATE, COUNTY),
@@ -43,10 +109,21 @@ gq_est_2020 <- read_csv("Raw/co-est2020-alldata.csv") %>%
 
 
 #### Merge frames together ------------------------------
+
+
+#### <------------ Need to join 18+ here
   
 est_2020 <- left_join(pop_est_2020, hu_est_2020, by = "GEOID") %>%
   left_join(gq_est_2020, by = "GEOID") %>%
-  mutate(GEOYEAR = 2020)
+  left_join(pop_est_2020_18P, by = "GEOID") %>%
+  mutate(EST_NH_WA_17U = EST_NH_WA_TOT - EST_NH_WA_18P,
+         EST_NH_BA_17U = EST_NH_BA_TOT - EST_NH_BA_18P,
+         EST_H_TOT_17U = EST_H_TOT_TOT - EST_H_TOT_18P,
+         EST_NH_AI_17U = EST_NH_AI_TOT - EST_NH_AI_18P,
+         EST_NH_AA_17U = EST_NH_AA_TOT - EST_NH_AA_18P,
+         EST_NH_NA_17U = EST_NH_NA_TOT - EST_NH_NA_18P,
+         EST_NH_TOM_17U = EST_NH_TOM_TOT - EST_NH_TOM_18P,
+         GEOYEAR = 2020)
 
 #### Add Valdez-Cordova Census Area ------------------------------
 

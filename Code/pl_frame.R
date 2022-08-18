@@ -75,6 +75,48 @@ hugq_2020 <- get_decennial(geography = "county",
                            year = 2020,
                            sumfile = "pl")
 
+#### under/over 18 from PL
+
+redist_wide_2020_18P <- redist_2020 %>%
+  mutate(table = str_sub(variable, -6, -6),
+         varnum = str_sub(variable, -3, -2),
+         age = ifelse(table == "2", "total", "over17"),
+         state = str_sub(GEOID, 1, 2)) %>%
+  select(-variable, -table) %>%
+  filter(age == "over17" & !(state == "72")) %>%
+  select(-state) %>%
+  pivot_wider(names_from = varnum, values_from = value) %>%
+  mutate(total_all_18P = `01`,
+         all_hisp_18P = `02`,
+         white_alone = `05` + `17`,
+         black_alone = `06` + `21`,
+         aian_alone  = `07` + `24`,
+         asian_alone = `08` + `26`,
+         nhpi_alone  = `09` + `27`,
+         sor_alone   = `10`,
+         multi_race  = `13`+`14`+`15`+`16`+`18`+`19`+`20`+`22`+`23`+`25`+`29`+`30`+`31`+`32`+`33`+`34`+`35`+
+           `36`+`37`+`38`+`39`+`40`+`41`+`42`+`43`+`44`+`45`+`46`+`47`+`48`+`50`+`51`+`52`+`53`+`54`+`55`+`56`+
+           `57`+`58`+`59`+`60`+`61`+`62`+`63`+`64`+`66`+`67`+`68`+`69`+`70`+`71`+`73`) %>%
+  select(-(4:76)) %>%
+  mutate(white_sor = round(sor_alone * sor_to_white),
+         black_sor = round(sor_alone * sor_to_black),
+         aian_sor  = round(sor_alone * sor_to_aian),
+         asian_sor = round(sor_alone * sor_to_asian),
+         nhpi_sor  = round(sor_alone * sor_to_nhpi),
+         multi_sor = round(sor_alone * sor_to_multi),
+         difference = white_sor+black_sor+aian_sor+asian_sor+nhpi_sor+multi_sor-sor_alone,
+         white_sor = white_sor - difference,
+         white_all_18P = white_alone + white_sor,
+         black_all_18P = black_alone + black_sor,
+         aian_all_18P  = aian_alone + aian_sor,
+         asian_all_18P = asian_alone + asian_sor,
+         nhpi_all_18P = nhpi_alone + nhpi_sor,
+         twoplus_all_18P = multi_race + multi_sor) %>%
+  select(GEOID, NAME, total_all_18P, all_hisp_18P, white_all_18P, black_all_18P, aian_all_18P, 
+         asian_all_18P, nhpi_all_18P, twoplus_all_18P)
+
+### Total Ages
+
 redist_wide_2020 <- redist_2020 %>%
   mutate(table = str_sub(variable, -6, -6),
          varnum = str_sub(variable, -3, -2),
@@ -122,6 +164,15 @@ fips <- fips_codes %>%
   select(fips, stabbrev = state, countynm = county)
 
 final_output <- redist_wide_2020 %>%
+  full_join(redist_wide_2020_18P, by = c("GEOID", "NAME")) %>%
+  mutate(total_all_17U = total_all_all - total_all_18P,
+         all_hisp_17U = all_hisp_all - all_hisp_18P,
+         white_all_17U = white_all_all - white_all_18P,
+         black_all_17U = black_all_all - black_all_18P,
+         aian_all_17U = aian_all_all - aian_all_18P,
+         asian_all_17U = asian_all_all - asian_all_18P,
+         nhpi_all_17U = nhpi_all_all - nhpi_all_18P,
+         twoplus_all_17U = twoplus_all_all - twoplus_all_18P) %>%
   full_join(hugq_wide, by = c("GEOID", "NAME")) %>%
   left_join(fips, by = c("GEOID" = "fips")) %>%
   select(-NAME) %>%
