@@ -116,7 +116,8 @@ gq_est_2020 <- read_csv("Raw/co-est2020-alldata.csv") %>%
 est_2020 <- left_join(pop_est_2020, hu_est_2020, by = "GEOID") %>%
   left_join(gq_est_2020, by = "GEOID") %>%
   left_join(pop_est_2020_18P, by = "GEOID") %>%
-  mutate(EST_NH_WA_17U = EST_NH_WA_TOT - EST_NH_WA_18P,
+  mutate(EST_TOT_TOT_17U = EST_POP_TOT - EST_TOT_TOT_18P,
+         EST_NH_WA_17U = EST_NH_WA_TOT - EST_NH_WA_18P,
          EST_NH_BA_17U = EST_NH_BA_TOT - EST_NH_BA_18P,
          EST_H_TOT_17U = EST_H_TOT_TOT - EST_H_TOT_18P,
          EST_NH_AI_17U = EST_NH_AI_TOT - EST_NH_AI_18P,
