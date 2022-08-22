@@ -124,6 +124,7 @@ pl_est_merge <- left_join(pl, est, by = "GEOID") %>%
          SHARE_NH_NA_18P_DIFF = ifelse((NH_NA_18P_DIFF == 0 | CEN_NH_NA_18P == 0), 0, (NH_NA_18P_DIFF/EST_NH_NA_18P)),
          SHARE_NH_TOM_18P_DIFF = ifelse((NH_TOM_18P_DIFF == 0 | CEN_NH_TOM_18P == 0), 0, (NH_TOM_18P_DIFF/EST_NH_TOM_18P)),
          SHARE_H_18P_DIFF = ifelse((H_18P_DIFF == 0 | CEN_H_TOT_18P == 0), 0, (H_18P_DIFF/EST_H_TOT_18P)),
+         SHARE_17U_DIFF = ifelse(P17U_DIFF == 0, 0, (P17U_DIFF/EST_TOT_TOT_17U)),
          SHARE_NH_BA_17U_DIFF = ifelse((NH_BA_17U_DIFF == 0 | CEN_NH_BA_17U == 0), 0, (NH_BA_17U_DIFF/EST_NH_BA_17U)),
          SHARE_NH_WA_17U_DIFF = ifelse((NH_WA_17U_DIFF == 0 | CEN_NH_WA_17U == 0), 0, (NH_WA_17U_DIFF/EST_NH_WA_17U)),
          SHARE_NH_AI_17U_DIFF = ifelse((NH_AI_17U_DIFF == 0 | CEN_NH_AI_17U == 0), 0, (NH_AI_17U_DIFF/EST_NH_AI_17U)),
